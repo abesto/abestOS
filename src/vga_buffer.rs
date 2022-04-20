@@ -1,3 +1,5 @@
+use core::fmt::Write;
+
 use spin::{Lazy, Mutex};
 use volatile::Volatile;
 
@@ -139,6 +141,15 @@ impl Writer {
     pub fn reset_color(&mut self) {
         self.color_code = ColorCode::default();
     }
+
+    pub fn clear(&mut self) {
+        for col in 0..self.buffer.width() {
+            for row in 0..self.buffer.height() {
+                self.buffer.chars[row][col].write(ScreenChar::default());
+            }
+        }
+        self.column_position = 0;
+    }
 }
 
 impl core::fmt::Write for Writer {
@@ -152,19 +163,23 @@ impl core::fmt::Write for Writer {
 
 pub static WRITER: Lazy<Mutex<Writer>> = Lazy::new(|| Mutex::new(Writer::new()));
 
-macro_rules! print {
-    ($($arg:tt)*) => {
-        write!(*$crate::vga_buffer::WRITER.lock(), $($arg)*).unwrap()
-    };
+#[doc(hidden)]
+pub fn _print(args: core::fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
 }
-pub(crate) use print;
 
-macro_rules! println {
+#[macro_export]
+macro_rules! vga_print {
     ($($arg:tt)*) => {
-        writeln!(*$crate::vga_buffer::WRITER.lock(), $($arg)*).unwrap()
+        $crate::vga_buffer::_print(format_args!($($arg)*));
     };
 }
-pub(crate) use println;
+
+#[macro_export]
+macro_rules! vga_println {
+    () => ($crate::vga_print!("\n"));
+    ($($arg:tt)*) => ($crate::vga_print!("{}\n", format_args!($($arg)*)));
+}
 
 pub fn set_color_code(foreground: Color, background: Color) {
     WRITER.lock().set_color_code(foreground, background);
@@ -172,4 +187,33 @@ pub fn set_color_code(foreground: Color, background: Color) {
 
 pub fn reset_color() {
     WRITER.lock().reset_color();
+}
+
+pub fn clear() {
+    WRITER.lock().clear();
+}
+
+#[cfg(test)]
+mod test {
+    use super::{clear, WRITER};
+
+    #[test_case]
+    fn test_println_many() {
+        clear();
+        for _ in 0..200 {
+            vga_println!("test_println_many output");
+        }
+    }
+
+    #[test_case]
+    fn test_println_output() {
+        clear();
+        let s = "Some test string that fits on a single line";
+        vga_println!("{}", s);
+        let height = WRITER.lock().buffer.height();
+        for (i, c) in s.chars().enumerate() {
+            let screen_char = WRITER.lock().buffer.chars[height - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_character), c);
+        }
+    }
 }
