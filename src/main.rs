@@ -1,30 +1,37 @@
 #![no_std]
 #![no_main]
+#![feature(once_cell)]
+
+mod vga_buffer;
 
 use bootloader::{entry_point, BootInfo};
-#[cfg(not(test))]
+use core::fmt::Write;
 use core::panic::PanicInfo;
 
+use vga_buffer::{println, reset_color, set_color_code, Color};
+
 /// This function is called on panic.
-#[cfg(not(test))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    set_color_code(Color::White, Color::Red);
+    println!("{}", info);
     loop {}
 }
 
 entry_point!(kernel_main);
 
-static HELLO: &[u8] = b"Hello World!";
-
 fn kernel_main(_boot_info: &'static BootInfo) -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
+    set_color_code(Color::Cyan, Color::DarkGray);
+    println!("Hello world! {}", 42);
+    println!();
 
-    for (i, &byte) in HELLO.iter().enumerate() {
-        unsafe {
-            *vga_buffer.offset(i as isize * 2) = byte;
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
-        }
-    }
+    set_color_code(Color::Yellow, Color::DarkGray);
+    println!("Hello world! {:?}", Color::Yellow);
+
+    reset_color();
+    println!("No colors now!");
+
+    None::<Option<u8>>.expect("Testing panic handler");
 
     loop {}
 }
