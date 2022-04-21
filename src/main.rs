@@ -6,14 +6,14 @@
 
 use bootloader::{entry_point, BootInfo};
 
+#[cfg(not(test))]
 use abest_os::println;
+#[cfg(not(test))]
 use abest_os::vga_buffer::{reset_color, set_color_code, Color};
 
 #[cfg(not(test))]
 entry_point!(kernel_main);
-#[cfg(test)]
-entry_point!(test_main);
-
+#[cfg(not(test))]
 fn kernel_main(_boot_info: &'static BootInfo) -> ! {
     set_color_code(Color::Cyan, Color::DarkGray);
     println!("Hello world! {}", 42);
@@ -26,10 +26,14 @@ fn kernel_main(_boot_info: &'static BootInfo) -> ! {
     println!("No colors now!");
 
     None::<Option<u8>>.expect("Testing panic handler");
+    println!("Not here anymore");
 
     loop {}
 }
 
+#[cfg(test)]
+entry_point!(test_main);
+#[cfg(test)]
 fn test_main(_boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_harness_main();
