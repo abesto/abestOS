@@ -1,6 +1,7 @@
 #![no_std]
 #![cfg_attr(test, no_main)]
 #![feature(custom_test_frameworks)]
+#![feature(abi_x86_interrupt)]
 #![test_runner(crate::testlib::test_runner)]
 #![reexport_test_harness_main = "test_harness_main"]
 
@@ -27,4 +28,8 @@ fn test_main(_boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_harness_main();
     loop {}
+}
+
+pub fn init() {
+    interrupts::init();
 }

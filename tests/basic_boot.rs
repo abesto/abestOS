@@ -11,6 +11,7 @@ use bootloader::{entry_point, BootInfo};
 
 entry_point!(test_main);
 fn test_main(_boot_info: &'static BootInfo) -> ! {
+    abest_os::init();
     test_harness_main();
     loop {}
 }
@@ -23,4 +24,9 @@ fn panic(info: &PanicInfo) -> ! {
 #[test_case]
 fn test_println() {
     println!("test_println output");
+}
+
+#[test_case]
+fn test_breakpoint() {
+    x86_64::instructions::interrupts::int3();
 }
