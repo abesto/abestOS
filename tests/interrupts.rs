@@ -22,7 +22,7 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 #[test_case]
-fn test_println() {
+fn test_sanity() {
     println!("test_println output");
 }
 

@@ -5,6 +5,7 @@
 #![test_runner(crate::testlib::test_runner)]
 #![reexport_test_harness_main = "test_harness_main"]
 
+pub mod gdt;
 pub mod interrupts;
 pub mod printlib;
 pub mod qemu;
@@ -31,5 +32,6 @@ fn test_main(_boot_info: &'static BootInfo) -> ! {
 }
 
 pub fn init() {
+    gdt::init();
     interrupts::init();
 }

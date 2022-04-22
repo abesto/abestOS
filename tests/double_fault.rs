@@ -9,15 +9,19 @@ use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    should_fail();
+    abest_os::init();
+    should_panic();
     println!("[test did not panic]");
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
-fn should_fail() {
-    print!("should_panic::should_fail...\t");
-    assert_eq!(0, 1);
+fn should_panic() {
+    print!("double_fault::should_panic...\t");
+    unsafe {
+        let mut _x = *(0xdeadbeef as *mut u32);
+        _x = 32;
+    }
 }
 
 #[panic_handler]
