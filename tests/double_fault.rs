@@ -13,7 +13,7 @@ pub extern "C" fn _start() -> ! {
     should_panic();
     println!("[test did not panic]");
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    abest_os::hlt_loop()
 }
 
 fn should_panic() {
@@ -28,5 +28,5 @@ fn should_panic() {
 fn panic(_info: &PanicInfo) -> ! {
     println!("[ok]");
     exit_qemu(QemuExitCode::Success);
-    loop {}
+    abest_os::hlt_loop()
 }

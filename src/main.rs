@@ -29,10 +29,9 @@ fn kernel_main(_boot_info: &'static BootInfo) -> ! {
 
     x86_64::instructions::interrupts::int3();
 
-    None::<Option<u8>>.expect("Testing panic handler");
-    println!("Not here anymore");
+    println!("Still here");
 
-    loop {}
+    abest_os::hlt_loop()
 }
 
 #[cfg(test)]
@@ -41,7 +40,7 @@ entry_point!(test_main);
 fn test_main(_boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_harness_main();
-    loop {}
+    abest_os::hlt_loop()
 }
 
 #[cfg(test)]
@@ -58,5 +57,5 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
         abest_os::vga_buffer::Color::Red,
     );
     println!("{}", info);
-    loop {}
+    abest_os::hlt_loop()
 }

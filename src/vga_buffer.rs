@@ -1,5 +1,3 @@
-use core::fmt::Write;
-
 use spin::{Lazy, Mutex};
 use volatile::Volatile;
 
@@ -165,7 +163,12 @@ pub static WRITER: Lazy<Mutex<Writer>> = Lazy::new(|| Mutex::new(Writer::new()))
 
 #[doc(hidden)]
 pub fn _print(args: core::fmt::Arguments) {
-    WRITER.lock().write_fmt(args).unwrap();
+    use core::fmt::Write;
+    // TODO disabling interrupts is bad, need a better solution
+    //      this is here to avoid deadlock on the WRITER mutex between an interrupt handler and the (currently, single) main "process"
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    });
 }
 
 #[macro_export]
@@ -207,13 +210,18 @@ mod test {
 
     #[test_case]
     fn test_println_output() {
-        clear();
+        use core::fmt::Write;
+
         let s = "Some test string that fits on a single line";
-        vga_println!("{}", s);
-        let height = WRITER.lock().buffer.height();
-        for (i, c) in s.chars().enumerate() {
-            let screen_char = WRITER.lock().buffer.chars[height - 2][i].read();
-            assert_eq!(char::from(screen_char.ascii_character), c);
-        }
+        x86_64::instructions::interrupts::without_interrupts(|| {
+            let mut writer = WRITER.lock();
+            writer.clear();
+            writeln!(writer, "\n{}", s).unwrap();
+            let height = writer.buffer.height();
+            for (i, c) in s.chars().enumerate() {
+                let screen_char = writer.buffer.chars[height - 2][i].read();
+                assert_eq!(char::from(screen_char.ascii_character), c);
+            }
+        });
     }
 }

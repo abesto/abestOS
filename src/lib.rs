@@ -28,7 +28,13 @@ entry_point!(test_main);
 fn test_main(_boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_harness_main();
-    loop {}
+    hlt_loop()
+}
+
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
 }
 
 pub fn init() {

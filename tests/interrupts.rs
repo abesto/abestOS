@@ -13,7 +13,7 @@ entry_point!(test_main);
 fn test_main(_boot_info: &'static BootInfo) -> ! {
     abest_os::init();
     test_harness_main();
-    loop {}
+    abest_os::hlt_loop()
 }
 
 #[panic_handler]

@@ -31,7 +31,7 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
     );
     println!("{}", info);
     crate::qemu::exit_qemu(crate::qemu::QemuExitCode::Failed);
-    loop {}
+    crate::hlt_loop()
 }
 
 #[test_case]
