@@ -1,7 +1,4 @@
-use linked_list_allocator::LockedHeap;
-
-pub const HEAP_START: usize = 0x_4444_4444_0000;
-pub const HEAP_SIZE: usize = 100 * 1024;
+pub mod fixed_size_block;
 
 use x86_64::{
     structures::paging::{
@@ -10,7 +7,31 @@ use x86_64::{
     VirtAddr,
 };
 
-pub fn init_heap(
+use self::fixed_size_block::FixedSizeBlockAllocator;
+
+pub const HEAP_START: usize = 0x_4444_4444_0000;
+pub const HEAP_SIZE: usize = 100 * 1024;
+
+/// A wrapper around spin::Mutex to permit trait implementations.
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
+
+/// # Safety
+/// Unsafe because we don't check that the frames we're grabbing are currently unmapped
+pub unsafe fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
 ) -> Result<(), MapToError<Size4KiB>> {
@@ -34,5 +55,11 @@ pub fn init_heap(
     Ok(())
 }
 
+/// Requires that `align` is a power of two.
+#[allow(dead_code)]
+fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
+}
+
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());

@@ -105,7 +105,7 @@ impl From<InterruptIndex> for u8 {
 
 impl From<InterruptIndex> for usize {
     fn from(index: InterruptIndex) -> Self {
-        return u8::from(index).into();
+        u8::from(index).into()
     }
 }
 

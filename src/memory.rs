@@ -9,12 +9,14 @@ use x86_64::{structures::paging::PageTable, VirtAddr};
 
 static LVL4_PAGE_TABLE_LOADED: spin::Mutex<bool> = spin::Mutex::new(false);
 
+/// # Safety
 /// Unsafe because there are no checks on physical_memory_offset actually being correct
 pub unsafe fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
     let level_4_table = unsafe { load_lvl4_page_table(physical_memory_offset) };
     unsafe { OffsetPageTable::new(level_4_table, physical_memory_offset) }
 }
 
+/// # Safety
 /// Unsafe because there are no checks on physical_memory_offset actually being correct
 unsafe fn load_lvl4_page_table(physical_memory_offset: VirtAddr) -> &'static mut PageTable {
     {
@@ -33,6 +35,8 @@ unsafe fn load_lvl4_page_table(physical_memory_offset: VirtAddr) -> &'static mut
     unsafe { &mut *page_table_ptr }
 }
 
+/// # Safety
+/// Unsafe because of raw memory reads to look up the page table
 pub unsafe fn translate_addr(addr: VirtAddr, physical_memory_offset: VirtAddr) -> Option<PhysAddr> {
     use x86_64::structures::paging::page_table::FrameError;
 
@@ -76,6 +80,7 @@ pub struct BootInfoFrameAllocator {
 impl BootInfoFrameAllocator {
     /// Create a FrameAllocator from the passed memory map.
     ///
+    /// # Safety
     /// This function is unsafe because the caller must guarantee that the passed
     /// memory map is valid. The main requirement is that all frames that are marked
     /// as `USABLE` in it are really unused.

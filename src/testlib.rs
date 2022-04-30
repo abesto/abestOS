@@ -2,14 +2,14 @@ use crate::qemu::{exit_qemu, QemuExitCode};
 use crate::{print, println};
 
 pub trait Testable {
-    fn run(&self) -> ();
+    fn run(&self);
 }
 
 impl<T> Testable for T
 where
     T: Fn(),
 {
-    fn run(&self) -> () {
+    fn run(&self) {
         print!("{}...\t", core::any::type_name::<T>());
         self();
         println!("[ok]");
@@ -35,6 +35,7 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 }
 
 #[test_case]
+#[allow(clippy::eq_op)]
 fn trivial_assertion() {
     assert_eq!(1, 1);
 }

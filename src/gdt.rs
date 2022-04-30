@@ -15,8 +15,7 @@ static TSS: Lazy<TaskStateSegment> = Lazy::new(|| {
         // TODO proper stack allocation once we have some memory management set up
         //      (ideally including a guard page)
         let stack_start = VirtAddr::from_ptr(unsafe { &STACK });
-        let stack_end = stack_start + STACK_SIZE;
-        stack_end
+        stack_start + STACK_SIZE
     };
     tss
 });

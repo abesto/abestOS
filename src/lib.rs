@@ -3,6 +3,7 @@
 #![feature(custom_test_frameworks)]
 #![feature(abi_x86_interrupt)]
 #![feature(alloc_error_handler)]
+#![feature(const_mut_refs)]
 #![test_runner(crate::testlib::test_runner)]
 #![reexport_test_harness_main = "test_harness_main"]
 #![deny(unsafe_op_in_unsafe_fn)]

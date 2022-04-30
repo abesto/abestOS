@@ -17,6 +17,10 @@ use abest_os::vga_buffer::{reset_color, set_color_code, Color};
 entry_point!(kernel_main);
 #[cfg(not(test))]
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    use abest_os::memory::BootInfoFrameAllocator;
+    use alloc::{boxed::*, rc::*, vec, vec::*};
+    use x86_64::VirtAddr;
+
     abest_os::init();
 
     set_color_code(Color::Cyan, Color::DarkGray);
@@ -37,8 +41,12 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     let mut mapper = unsafe { abest_os::memory::init(phys_mem_offset) };
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
-    abest_os::allocator::init_heap(&mut mapper, &mut frame_allocator)
-        .expect("heap initialization failed");
+    // Right after we set up paging we carve out the frames for the kernel heap.
+    // This means we know all pages are currently unmapped, so this unsafe is fine.
+    unsafe {
+        abest_os::allocator::init_heap(&mut mapper, &mut frame_allocator)
+            .expect("heap initialization failed");
+    }
 
     // allocate a number on the heap
     let heap_value = Box::new(41);
@@ -53,9 +61,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     // create a reference counted vector -> will be freed when count reaches 0
 
-    use abest_os::memory::BootInfoFrameAllocator;
-    use alloc::{boxed::*, rc::*, vec, vec::*};
-    use x86_64::VirtAddr;
     let reference_counted = Rc::new(vec![1, 2, 3]);
     let cloned_reference = reference_counted.clone();
     println!(
